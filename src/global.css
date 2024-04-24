@@ -1,0 +1,83 @@
+html,
+body,
+#root {
+  height: 100%;
+}
+body {
+  margin: 0;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto,
+    'Helvetica Neue', Arial, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji',
+    'Segoe UI Symbol';
+}
+a {
+  text-decoration: none;
+  color: inherit;
+}
+button,
+input,
+textarea,
+select {
+  border: none;
+  padding: 0;
+  background: none;
+  color: inherit;
+  font: inherit;
+}
+button:not(:disabled) {
+  cursor: pointer;
+}
+
+.editor {
+  height: 100%;
+  display: flex;
+}
+
+.output {
+  width: 400px;
+  flex: none;
+  display: flex;
+  flex-direction: column;
+  background-color: rgba(0, 0, 0, 0.02);
+}
+.menubar {
+  display: flex;
+  align-items: center;
+  height: 40px;
+  padding: 0 15px;
+  gap: 15px;
+}
+.preview {
+  aspect-ratio: 16 / 9;
+  /* TEMP */
+  background-image: linear-gradient(-50deg, orange, #ff0092);
+}
+
+.script {
+  flex: auto;
+  display: flex;
+  flex-direction: column;
+  padding: 20px;
+  gap: 20px;
+
+  & textarea {
+    resize: none;
+
+    &:focus {
+      /* TODO: show focus? */
+      outline: none;
+    }
+
+    &:last-child {
+      flex: auto;
+    }
+  }
+}
+.annotation {
+  display: flex;
+  align-items: center;
+  height: 40px;
+  padding: 0 15px;
+  border-radius: 100px;
+  background-image: linear-gradient(-50deg, orange, #ff0092);
+  color: white;
+}
