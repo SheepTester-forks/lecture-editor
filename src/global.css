@@ -62,9 +62,13 @@ button:not(:disabled) {
     padding: 20px;
     border-bottom: 1px solid #cbd5e1;
   }
+}
+.text {
+  flex: none;
+  display: flex;
 
   & textarea {
-    flex: none;
+    flex: auto;
     resize: none;
     padding: 20px;
 
@@ -79,9 +83,13 @@ button:not(:disabled) {
       outline: none;
     }
   }
+
+  & .remove-btn {
+    align-self: center;
+    margin: 0 20px;
+  }
 }
 .annotation {
-  flex: none;
   display: flex;
   align-items: center;
   height: 40px;
@@ -134,4 +142,16 @@ button:not(:disabled) {
 }
 .end {
   border-bottom: 1px solid #cbd5e1;
+}
+.remove-btn {
+  display: flex;
+  margin-left: auto;
+  color: #cbd5e1;
+
+  &:focus-visible {
+    color: #64748b;
+  }
+  &:hover {
+    color: #f43f5e;
+  }
 }

@@ -1,5 +1,6 @@
 import { Fragment, useRef, useState } from 'react'
 import { AddIcon } from './components/AddIcon'
+import { RemoveIcon } from './components/RemoveIcon'
 
 type Annotation =
   | { type: 'animation'; value: string }
@@ -81,9 +82,26 @@ export function App () {
               </div>
             )}
             {part.type === 'text' ? (
-              <textarea placeholder='Start typing...' rows={1}>
-                {part.content}
-              </textarea>
+              <div className='text'>
+                <textarea
+                  placeholder='Start typing...'
+                  rows={1}
+                  value={part.content}
+                  onChange={({ currentTarget: { value } }) =>
+                    setParts(parts =>
+                      parts.with(i, { ...part, content: value })
+                    )
+                  }
+                ></textarea>
+                {i > 0 && i < parts.length - 1 && part.content.trim() === '' && (
+                  <button
+                    className='remove-btn'
+                    onClick={() => setParts(parts => parts.toSpliced(i, 1))}
+                  >
+                    <RemoveIcon />
+                  </button>
+                )}
+              </div>
             ) : (
               <div
                 className={`annotation ${
@@ -100,6 +118,32 @@ export function App () {
                     : ''}{' '}
                   <strong>{part.annotation.value}</strong>
                 </span>
+                <button
+                  className='remove-btn'
+                  onClick={() => {
+                    const before = parts[i - 1]
+                    const after = parts[i + 1]
+                    console.log(
+                      before?.type === 'text' && after?.type === 'text'
+                    )
+                    setParts(parts =>
+                      before?.type === 'text' && after?.type === 'text'
+                        ? parts.toSpliced(i - 1, 3, {
+                            ...before,
+                            content:
+                              before.content.trimEnd() +
+                              (before.content.trim() !== '' &&
+                              after.content.trim() !== ''
+                                ? '\n\n'
+                                : '') +
+                              after.content.trimStart()
+                          })
+                        : parts.toSpliced(i, 1)
+                    )
+                  }}
+                >
+                  <RemoveIcon />
+                </button>
               </div>
             )}
             <div className='add-row'>

@@ -1,5 +1,5 @@
-export function AddIcon () {
-  // https://github.com/feathericons/feather/blob/main/icons/plus.svg
+export function RemoveIcon () {
+  // https://github.com/feathericons/feather/blob/main/icons/x.svg
   return (
     <svg
       xmlns='http://www.w3.org/2000/svg'
@@ -11,11 +11,11 @@ export function AddIcon () {
       strokeWidth='2'
       strokeLinecap='round'
       strokeLinejoin='round'
-      aria-label='Add'
-      className='add-icon'
+      aria-label='Remove'
+      className='remove-icon'
     >
-      <line x1='12' y1='5' x2='12' y2='19' />
-      <line x1='5' y1='12' x2='19' y2='12' />
+      <line x1='18' y1='6' x2='6' y2='18' />
+      <line x1='6' y1='6' x2='18' y2='18' />
     </svg>
   )
 }
