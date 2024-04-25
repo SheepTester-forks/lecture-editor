@@ -71,6 +71,7 @@ button:not(:disabled) {
     flex: auto;
     resize: none;
     padding: 20px;
+    overflow: hidden;
 
     &::placeholder {
       opacity: 0.5;

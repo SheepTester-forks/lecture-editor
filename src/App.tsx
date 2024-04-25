@@ -151,11 +151,26 @@ export function App () {
                 className='add-btn'
                 onClick={() =>
                   setParts(parts =>
-                    parts.toSpliced(i + 1, 0, {
-                      id: nextId.current++,
-                      type: 'annotation',
-                      annotation: { type: 'animation', value: 'hey' }
-                    })
+                    i === parts.length - 1
+                      ? parts.toSpliced(
+                          i + 1,
+                          0,
+                          {
+                            id: nextId.current++,
+                            type: 'annotation',
+                            annotation: { type: 'animation', value: 'hey' }
+                          },
+                          {
+                            id: nextId.current++,
+                            type: 'text',
+                            content: ''
+                          }
+                        )
+                      : parts.toSpliced(i + 1, 0, {
+                          id: nextId.current++,
+                          type: 'annotation',
+                          annotation: { type: 'animation', value: 'hey' }
+                        })
                   )
                 }
               >
