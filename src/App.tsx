@@ -5,6 +5,11 @@ import { TextArea } from './components/TextArea'
 import { PlayIcon } from './components/PlayIcon'
 import { PauseIcon } from './components/PauseIcon'
 import { Part, strategize } from './video-strategy'
+import { useNow } from './useNow'
+
+type PlayState =
+  | { playing: false; time: number }
+  | { playing: true; offset: number }
 
 export function App () {
   const nextId = useRef(0)
@@ -35,10 +40,21 @@ export function App () {
       content: 'Today we will talk about things.'
     }
   ])
-  const [playing, setPlaying] = useState(false)
-  const [time, setTime] = useState(0)
+  const [playState, setPlayState] = useState<PlayState>({
+    playing: false,
+    time: 0
+  })
 
+  const now = useNow(playState.playing)
   const previewVideo = useMemo(() => strategize(parts), [parts])
+
+  const time = Math.max(
+    Math.min(
+      playState.playing ? now + playState.offset : playState.time,
+      previewVideo.length
+    ),
+    0
+  )
   const caption = previewVideo.captions.findLast(
     caption => time >= caption.time
   ) ?? { content: '' }
@@ -57,13 +73,29 @@ export function App () {
           </div>
         </div>
         <div className='controls'>
-          <button className='play-btn' onClick={() => setPlaying(!playing)}>
-            {playing ? <PauseIcon /> : <PlayIcon />}
+          <button
+            className='play-btn'
+            onClick={() =>
+              setPlayState(
+                playState.playing
+                  ? { playing: false, time }
+                  : { playing: true, offset: time - Date.now() }
+              )
+            }
+          >
+            {playState.playing ? <PauseIcon /> : <PlayIcon />}
           </button>
           <input
             type='range'
             value={time}
-            onChange={e => setTime(e.currentTarget.valueAsNumber)}
+            onChange={e => {
+              const time = e.currentTarget.valueAsNumber
+              setPlayState(
+                playState.playing
+                  ? { playing: true, offset: time - Date.now() }
+                  : { playing: false, time }
+              )
+            }}
             step='any'
             min={0}
             max={previewVideo.length}
