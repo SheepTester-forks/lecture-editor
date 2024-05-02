@@ -2,6 +2,8 @@ import { Fragment, useRef, useState } from 'react'
 import { AddIcon } from './components/AddIcon'
 import { RemoveIcon } from './components/RemoveIcon'
 import { TextArea } from './components/TextArea'
+import { PlayIcon } from './components/PlayIcon'
+import { PauseIcon } from './components/PauseIcon'
 
 type Annotation =
   | { type: 'animation'; value: string }
@@ -41,6 +43,9 @@ export function App () {
       content: 'Today we will talk about things.'
     }
   ])
+  const [playing, setPlaying] = useState(false)
+  const [time, setTime] = useState(0)
+
   return (
     <div className='editor'>
       <div className='output'>
@@ -50,6 +55,17 @@ export function App () {
           <button className='menubar-btn'>Edit</button>
         </div>
         <div className='preview'></div>
+        <div className='controls'>
+          <button className='play-btn' onClick={() => setPlaying(!playing)}>
+            {playing ? <PauseIcon /> : <PlayIcon />}
+          </button>
+          <input
+            type='range'
+            value={time}
+            onChange={e => setTime(e.currentTarget.valueAsNumber)}
+            className='scrubber'
+          />
+        </div>
       </div>
       <div className='script'>
         <h2>Script</h2>
