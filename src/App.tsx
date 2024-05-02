@@ -1,18 +1,10 @@
-import { Fragment, useRef, useState } from 'react'
+import { Fragment, useMemo, useRef, useState } from 'react'
 import { AddIcon } from './components/AddIcon'
 import { RemoveIcon } from './components/RemoveIcon'
 import { TextArea } from './components/TextArea'
 import { PlayIcon } from './components/PlayIcon'
 import { PauseIcon } from './components/PauseIcon'
-
-type Annotation =
-  | { type: 'animation'; value: string }
-  | { type: 'set-layout'; value: string }
-  | { type: 'set-background'; value: string }
-type Part = (
-  | { type: 'text'; content: string }
-  | { type: 'annotation'; annotation: Annotation }
-) & { id: number }
+import { Part, strategize } from './video-strategy'
 
 export function App () {
   const nextId = useRef(0)
@@ -46,6 +38,11 @@ export function App () {
   const [playing, setPlaying] = useState(false)
   const [time, setTime] = useState(0)
 
+  const previewVideo = useMemo(() => strategize(parts), [parts])
+  const caption = previewVideo.captions.findLast(
+    caption => time >= caption.time
+  ) ?? { content: '' }
+
   return (
     <div className='editor'>
       <div className='output'>
@@ -54,7 +51,11 @@ export function App () {
           <button className='menubar-btn'>File</button>
           <button className='menubar-btn'>Edit</button>
         </div>
-        <div className='preview'></div>
+        <div className='preview'>
+          <div className='caption'>
+            <span>{caption.content}</span>
+          </div>
+        </div>
         <div className='controls'>
           <button className='play-btn' onClick={() => setPlaying(!playing)}>
             {playing ? <PauseIcon /> : <PlayIcon />}
@@ -63,6 +64,9 @@ export function App () {
             type='range'
             value={time}
             onChange={e => setTime(e.currentTarget.valueAsNumber)}
+            step='any'
+            min={0}
+            max={previewVideo.length}
             className='scrubber'
           />
         </div>
