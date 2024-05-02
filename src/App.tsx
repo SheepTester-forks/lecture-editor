@@ -1,6 +1,7 @@
 import { Fragment, useRef, useState } from 'react'
 import { AddIcon } from './components/AddIcon'
 import { RemoveIcon } from './components/RemoveIcon'
+import { TextArea } from './components/TextArea'
 
 type Annotation =
   | { type: 'animation'; value: string }
@@ -83,16 +84,15 @@ export function App () {
             )}
             {part.type === 'text' ? (
               <div className='text'>
-                <textarea
+                <TextArea
                   placeholder='Start typing...'
-                  rows={1}
                   value={part.content}
-                  onChange={({ currentTarget: { value } }) =>
+                  onChange={value =>
                     setParts(parts =>
                       parts.with(i, { ...part, content: value })
                     )
                   }
-                ></textarea>
+                ></TextArea>
                 {i > 0 && i < parts.length - 1 && part.content.trim() === '' && (
                   <button
                     className='remove-btn'
