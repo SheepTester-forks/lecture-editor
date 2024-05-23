@@ -55,6 +55,7 @@ export function App () {
     ),
     0
   )
+  const ended = time === previewVideo.length
   const caption = previewVideo.captions.findLast(
     caption => time >= caption.time
   ) ?? { content: '' }
@@ -77,13 +78,15 @@ export function App () {
             className='play-btn'
             onClick={() =>
               setPlayState(
-                playState.playing
+                ended
+                  ? { playing: true, offset: -Date.now() }
+                  : playState.playing
                   ? { playing: false, time }
                   : { playing: true, offset: time - Date.now() }
               )
             }
           >
-            {playState.playing ? <PauseIcon /> : <PlayIcon />}
+            {playState.playing && !ended ? <PauseIcon /> : <PlayIcon />}
           </button>
           <input
             type='range'
