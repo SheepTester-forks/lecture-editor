@@ -21,7 +21,7 @@ export type Caption = {
   content: string
 }
 export type Action = Annotation & { time: number }
-export type Stategy = {
+export type Strategy = {
   captions: Caption[]
   actions: Action[]
   length: number
@@ -30,7 +30,7 @@ const MAX_CAPTION_LENGTH = 50
 // Speaking 150~160 wpm, 5~6.5 chars/word, so 160 * 5 chars/min, or `minute /
 // (160 * 5)` = 75 milliseconds/char
 const EST_TIME_PER_CHAR = 75
-export function strategize (parts: PartBase[]): Stategy {
+export function strategize (parts: PartBase[]): Strategy {
   const captions: Caption[] = []
   const actions: Action[] = []
 

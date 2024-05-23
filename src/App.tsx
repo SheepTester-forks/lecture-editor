@@ -1,4 +1,4 @@
-import { Fragment, useMemo, useRef, useState } from 'react'
+import { Fragment, useEffect, useMemo, useRef, useState } from 'react'
 import { AddIcon } from './components/AddIcon'
 import { RemoveIcon } from './components/RemoveIcon'
 import { TextArea } from './components/TextArea'
@@ -7,6 +7,7 @@ import { PauseIcon } from './components/PauseIcon'
 import { Part, strategize } from './video-strategy'
 import { useNow } from './useNow'
 import { AnnotationContents } from './components/Annotation'
+import { render } from './render/render'
 
 type PlayState =
   | { playing: false; time: number }
@@ -56,6 +57,15 @@ export function App () {
     caption => time >= caption.time
   ) ?? { content: '' }
 
+  const context = useRef<CanvasRenderingContext2D | null>(null)
+  const [size, setSize] = useState({ width: 0, height: 0 })
+
+  useEffect(() => {
+    if (context.current) {
+      render(context.current, previewVideo, time)
+    }
+  }, [size, previewVideo, time])
+
   return (
     <div className='editor'>
       <div className='output'>
@@ -65,6 +75,25 @@ export function App () {
           <button className='menubar-btn'>Edit</button>
         </div>
         <div className='preview'>
+          <canvas
+            className='canvas'
+            width={size.width}
+            height={size.height}
+            ref={canvas => {
+              context.current = canvas?.getContext('2d') ?? null
+
+              if (!canvas?.parentElement) {
+                return
+              }
+              new ResizeObserver(([{ contentBoxSize }]) => {
+                const [{ blockSize, inlineSize }] = contentBoxSize
+                setSize({
+                  width: inlineSize * window.devicePixelRatio,
+                  height: blockSize * window.devicePixelRatio
+                })
+              }).observe(canvas?.parentElement)
+            }}
+          ></canvas>
           <div className='caption'>
             <span>{caption.content}</span>
           </div>
