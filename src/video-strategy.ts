@@ -1,7 +1,16 @@
+export type Layout = 'slide-only' | 'slide-avatar' | 'avatar-only'
+export type Gesture = 'point' | 'nod' | 'glance'
+export type GestureTarget = 'top' | 'middle' | 'bottom'
 export type Annotation =
-  | { type: 'animation'; value: string }
-  | { type: 'set-layout'; value: string }
-  | { type: 'set-background'; value: string }
+  | { type: 'set-layout'; layout: Layout }
+  | { type: 'set-slide'; image: HTMLImageElement | null }
+  | {
+      type: 'play-video'
+      video: HTMLVideoElement | null
+      from: number
+      to: number
+    }
+  | { type: 'gesture'; gesture: Gesture; towards: GestureTarget }
 export type PartBase =
   | { type: 'text'; content: string }
   | { type: 'annotation'; annotation: Annotation }
@@ -26,11 +35,11 @@ export function strategize (parts: PartBase[]): Stategy {
   const actions: Action[] = []
 
   let time = 0
+  let caption = ''
   for (const part of parts) {
     if (part.type === 'text') {
       const lines = part.content.split(/\s*\n\s*/)
       for (const line of lines) {
-        let caption = ''
         let lastIndex = 0
         for (const { index } of line.matchAll(/\s+/g)) {
           // `index` is the index of the first whitespace character
@@ -54,15 +63,18 @@ export function strategize (parts: PartBase[]): Stategy {
         } else {
           caption += rest
         }
-        if (caption.length > 0) {
-          const content = caption.trim()
-          captions.push({ content, time })
-          time += content.replace(/\s/g, '').length * EST_TIME_PER_CHAR
-        }
+      }
+      if (caption) {
+        caption += ' '
       }
     } else {
       actions.push({ ...part.annotation, time })
     }
+  }
+  if (caption.length > 0) {
+    const content = caption.trim()
+    captions.push({ content, time })
+    time += content.replace(/\s/g, '').length * EST_TIME_PER_CHAR
   }
 
   return { captions, actions, length: time }

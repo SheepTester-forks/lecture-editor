@@ -6,6 +6,7 @@ import { PlayIcon } from './components/PlayIcon'
 import { PauseIcon } from './components/PauseIcon'
 import { Part, strategize } from './video-strategy'
 import { useNow } from './useNow'
+import { AnnotationContents } from './components/Annotation'
 
 type PlayState =
   | { playing: false; time: number }
@@ -22,17 +23,12 @@ export function App () {
     {
       id: -2,
       type: 'annotation',
-      annotation: { type: 'set-layout', value: 'Lecturer Only' }
+      annotation: { type: 'set-layout', layout: 'avatar-only' }
     },
     {
       id: -3,
       type: 'annotation',
-      annotation: { type: 'animation', value: 'Show Name' }
-    },
-    {
-      id: -4,
-      type: 'annotation',
-      annotation: { type: 'set-background', value: 'Scripps Pier' }
+      annotation: { type: 'gesture', gesture: 'point', towards: 'top' }
     },
     {
       id: -5,
@@ -64,7 +60,7 @@ export function App () {
     <div className='editor'>
       <div className='output'>
         <div className='menubar'>
-          <strong className='logo'>Lecture Editor</strong>
+          <strong className='logo'>Ready Room</strong>
           <button className='menubar-btn'>File</button>
           <button className='menubar-btn'>Edit</button>
         </div>
@@ -127,7 +123,10 @@ export function App () {
                         {
                           id: nextId.current++,
                           type: 'annotation',
-                          annotation: { type: 'animation', value: 'hey' }
+                          annotation: {
+                            type: 'set-layout',
+                            layout: 'slide-only'
+                          }
                         }
                       )
                     )
@@ -163,16 +162,7 @@ export function App () {
                   parts[i - 1]?.type !== 'annotation' ? 'first' : ''
                 } ${parts[i + 1]?.type !== 'annotation' ? 'last' : ''}`}
               >
-                <span>
-                  {part.annotation.type === 'animation'
-                    ? 'Play animation'
-                    : part.annotation.type === 'set-background'
-                    ? 'Change background to'
-                    : part.annotation.type === 'set-layout'
-                    ? 'Change layout to'
-                    : ''}{' '}
-                  <strong>{part.annotation.value}</strong>
-                </span>
+                <AnnotationContents annotation={part.annotation} />
                 <button
                   className='remove-btn'
                   onClick={() => {
@@ -213,7 +203,10 @@ export function App () {
                           {
                             id: nextId.current++,
                             type: 'annotation',
-                            annotation: { type: 'animation', value: 'hey' }
+                            annotation: {
+                              type: 'set-layout',
+                              layout: 'slide-avatar'
+                            }
                           },
                           {
                             id: nextId.current++,
@@ -224,7 +217,10 @@ export function App () {
                       : parts.toSpliced(i + 1, 0, {
                           id: nextId.current++,
                           type: 'annotation',
-                          annotation: { type: 'animation', value: 'hey' }
+                          annotation: {
+                            type: 'set-layout',
+                            layout: 'avatar-only'
+                          }
                         })
                   )
                 }
