@@ -24,7 +24,7 @@ export function App () {
     {
       id: -2,
       type: 'annotation',
-      annotation: { type: 'set-layout', layout: 'avatar-only' }
+      annotation: { type: 'set-layout', layout: 'slide-only' }
     },
     {
       id: -3,
@@ -57,8 +57,31 @@ export function App () {
     caption => time >= caption.time
   ) ?? { content: '' }
 
+  const canvas = useRef<HTMLCanvasElement>(null)
   const context = useRef<CanvasRenderingContext2D | null>(null)
   const [size, setSize] = useState({ width: 0, height: 0 })
+  useEffect(() => {
+    context.current = canvas.current?.getContext('2d') ?? null
+
+    const observer = new ResizeObserver(([{ contentBoxSize }]) => {
+      const [{ blockSize, inlineSize }] = contentBoxSize
+      const newSize = {
+        width: inlineSize * window.devicePixelRatio,
+        height: blockSize * window.devicePixelRatio
+      }
+      setSize(size =>
+        size.width === newSize.width && size.height === newSize.height
+          ? size
+          : newSize
+      )
+    })
+    if (canvas.current?.parentElement) {
+      observer.observe(canvas.current.parentElement)
+    }
+    return () => {
+      observer.disconnect()
+    }
+  }, [])
 
   useEffect(() => {
     if (context.current) {
@@ -79,20 +102,7 @@ export function App () {
             className='canvas'
             width={size.width}
             height={size.height}
-            ref={canvas => {
-              context.current = canvas?.getContext('2d') ?? null
-
-              if (!canvas?.parentElement) {
-                return
-              }
-              new ResizeObserver(([{ contentBoxSize }]) => {
-                const [{ blockSize, inlineSize }] = contentBoxSize
-                setSize({
-                  width: inlineSize * window.devicePixelRatio,
-                  height: blockSize * window.devicePixelRatio
-                })
-              }).observe(canvas?.parentElement)
-            }}
+            ref={canvas}
           ></canvas>
           <div className='caption'>
             <span>{caption.content}</span>

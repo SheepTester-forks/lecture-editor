@@ -1,4 +1,4 @@
-import { Strategy } from '../video-strategy'
+import { Layout, Strategy } from '../video-strategy'
 
 const FONT = `'Brix Sans', 'Source Sans 3', sans-serif`
 
@@ -24,6 +24,26 @@ export function render (
     WIDTH - PADDING,
     HEIGHT - PADDING
   )
+
+  let layout: Layout = 'avatar-only'
+  for (const action of strategy.actions) {
+    if (time < action.time) {
+      break
+    }
+    if (action.type === 'set-layout') {
+      layout = action.layout
+    }
+  }
+
+  if (layout === 'slide-only') {
+    context.fillStyle = 'white'
+    context.fillRect(
+      PADDING,
+      PADDING,
+      WIDTH - PADDING * 2,
+      HEIGHT - PADDING * 2 - 40
+    )
+  }
 
   context.restore()
 }

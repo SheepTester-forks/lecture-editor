@@ -35,33 +35,22 @@ export function strategize (parts: PartBase[]): Strategy {
   const actions: Action[] = []
 
   let time = 0
+  let captionStartTime = 0
   let caption = ''
   for (const part of parts) {
     if (part.type === 'text') {
       const lines = part.content.split(/\s*\n\s*/)
       for (const line of lines) {
-        let lastIndex = 0
-        for (const { index } of line.matchAll(/\s+/g)) {
-          // `index` is the index of the first whitespace character
-          const appendum = line.slice(lastIndex, index)
+        for (const appendum of splitBySpaces(line)) {
           if (caption.length + appendum.length > MAX_CAPTION_LENGTH) {
             const content = caption.trim()
-            captions.push({ content, time })
-            time += content.replace(/\s/g, '').length * EST_TIME_PER_CHAR
+            captions.push({ content, time: captionStartTime })
+            captionStartTime = time
             caption = appendum
           } else {
             caption += appendum
           }
-          lastIndex = index
-        }
-        const rest = line.slice(lastIndex)
-        if (caption.length + rest.length > MAX_CAPTION_LENGTH) {
-          const content = caption.trim()
-          captions.push({ content, time })
-          time += content.replace(/\s/g, '').length * EST_TIME_PER_CHAR
-          caption = rest
-        } else {
-          caption += rest
+          time += appendum.replace(/\s/g, '').length * EST_TIME_PER_CHAR
         }
       }
       if (caption) {
@@ -73,9 +62,32 @@ export function strategize (parts: PartBase[]): Strategy {
   }
   if (caption.length > 0) {
     const content = caption.trim()
-    captions.push({ content, time })
+    captions.push({ content, time: captionStartTime })
     time += content.replace(/\s/g, '').length * EST_TIME_PER_CHAR
   }
 
   return { captions, actions, length: time }
+}
+
+/**
+ * Splits a string by whitespace so that every word in the returned list begins
+ * with some whitespace, except for the first word.
+ *
+ * @example
+ * > Array.from(splitBySpaces('Hi! Hello world!'))
+ * ['Hi!', ' Hello', ' world!']
+ *
+ * > Array.from(splitBySpaces(' Hi! Hello  world! '))
+ * [' Hi!', ' Hello', '  world!', ' ']
+ */
+function * splitBySpaces (string: string): Generator<string> {
+  let lastIndex = 0
+  for (const { index } of string.matchAll(/\s+/g)) {
+    if (index === 0) {
+      continue
+    }
+    yield string.slice(lastIndex, index)
+    lastIndex = index
+  }
+  yield string.slice(lastIndex)
 }
