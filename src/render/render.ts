@@ -58,19 +58,19 @@ type Style = Rect & {
 }
 
 export function render (
-  context: CanvasRenderingContext2D,
+  c: CanvasRenderingContext2D,
   strategy: Strategy,
   time: number
 ): void {
-  context.save()
+  c.save()
 
-  context.clearRect(0, 0, WIDTH, HEIGHT)
-  context.scale(context.canvas.width / WIDTH, context.canvas.height / HEIGHT)
+  c.clearRect(0, 0, WIDTH, HEIGHT)
+  c.scale(c.canvas.width / WIDTH, c.canvas.height / HEIGHT)
 
-  context.font = `40px ${FONT}`
-  context.fillStyle = 'black'
-  context.textAlign = 'right'
-  context.fillText(
+  c.font = `40px ${FONT}`
+  c.fillStyle = 'black'
+  c.textAlign = 'right'
+  c.fillText(
     `© ${new Date().getFullYear()} Regents of the University of California`,
     WIDTH - PADDING,
     HEIGHT - PADDING
@@ -140,17 +140,52 @@ export function render (
     )
   }
 
+  const radius = 20
   if (layoutStyle.opacity > 0) {
-    context.globalAlpha = layoutStyle.opacity
-    context.fillStyle = 'white'
-    context.fillRect(
+    c.save()
+    c.globalAlpha = layoutStyle.opacity
+    c.beginPath()
+    c.moveTo(layoutStyle.x + radius, layoutStyle.y)
+    c.arc(
+      layoutStyle.x + layoutStyle.width - radius,
+      layoutStyle.y + radius,
+      radius,
+      (3 * Math.PI) / 2,
+      (4 * Math.PI) / 2
+    )
+    c.arc(
+      layoutStyle.x + layoutStyle.width - radius,
+      layoutStyle.y + layoutStyle.height - radius,
+      radius,
+      (4 * Math.PI) / 2,
+      (1 * Math.PI) / 2
+    )
+    c.arc(
+      layoutStyle.x + radius,
+      layoutStyle.y + layoutStyle.height - radius,
+      radius,
+      (1 * Math.PI) / 2,
+      (2 * Math.PI) / 2
+    )
+    c.arc(
+      layoutStyle.x + radius,
+      layoutStyle.y + radius,
+      radius,
+      (2 * Math.PI) / 2,
+      (3 * Math.PI) / 2
+    )
+
+    c.closePath()
+    c.clip()
+    c.fillStyle = 'white'
+    c.fillRect(
       layoutStyle.x,
       layoutStyle.y,
       layoutStyle.width,
       layoutStyle.height
     )
-    context.globalAlpha = 1
+    c.restore()
   }
 
-  context.restore()
+  c.restore()
 }
