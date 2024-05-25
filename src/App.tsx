@@ -201,7 +201,12 @@ export function App () {
                   parts[i - 1]?.type !== 'annotation' ? 'first' : ''
                 } ${parts[i + 1]?.type !== 'annotation' ? 'last' : ''}`}
               >
-                <AnnotationContents annotation={part.annotation} />
+                <AnnotationContents
+                  annotation={part.annotation}
+                  onEdit={annotation => {
+                    setParts(parts.with(i, { ...part, annotation }))
+                  }}
+                />
                 <button
                   className='remove-btn'
                   onClick={() => {

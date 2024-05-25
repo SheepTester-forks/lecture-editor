@@ -18,13 +18,35 @@ const gestureTargetNames: Record<GestureTarget, string> = {
 
 export type AnnotationContentsProps = {
   annotation: Annotation
+  onEdit: (annotation: Annotation) => void
 }
-export function AnnotationContents ({ annotation }: AnnotationContentsProps) {
+export function AnnotationContents ({
+  annotation,
+  onEdit
+}: AnnotationContentsProps) {
   switch (annotation.type) {
     case 'set-layout':
       return (
         <span>
-          Change layout to <strong>{layoutNames[annotation.layout]}</strong>
+          Change layout to{' '}
+          <select
+            value={annotation.layout}
+            onChange={e => {
+              if (
+                e.currentTarget.value === 'slide-only' ||
+                e.currentTarget.value === 'slide-avatar' ||
+                e.currentTarget.value === 'avatar-only'
+              ) {
+                onEdit({ ...annotation, layout: e.currentTarget.value })
+              }
+            }}
+          >
+            {Object.entries(layoutNames).map(([value, name]) => (
+              <option key={value} value={value}>
+                {name}
+              </option>
+            ))}
+          </select>
         </span>
       )
     case 'gesture':
