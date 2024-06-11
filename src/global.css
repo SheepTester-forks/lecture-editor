@@ -109,6 +109,12 @@ select:not(:disabled) {
   height: 100%;
 }
 
+.annotations {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
 .script {
   flex: auto;
   display: flex;
@@ -116,9 +122,12 @@ select:not(:disabled) {
   overflow: auto;
 
   & h2 {
-    margin: 0;
-    padding: 20px;
-    border-bottom: 1px solid #cbd5e1;
+    margin: 20px;
+    margin-bottom: 0;
+  }
+
+  & .annotation {
+    margin: 0 20px;
   }
 }
 .text {
@@ -167,10 +176,13 @@ select:not(:disabled) {
   align-items: center;
   min-height: 40px;
   padding: 5px 15px;
-  margin: 0 20px;
+  box-sizing: border-box;
   background-color: #f1f5f9;
   border: 1px solid #cbd5e1;
   border-top-width: 0;
+  touch-action: none;
+  user-select: none;
+  cursor: grab;
   &.first {
     border-top-width: 1px;
     border-top-left-radius: 10px;
@@ -179,6 +191,11 @@ select:not(:disabled) {
   &.last {
     border-bottom-left-radius: 10px;
     border-bottom-right-radius: 10px;
+  }
+  &.dragging {
+    position: fixed;
+    cursor: grabbing;
+    box-shadow: 0 3px 10px rgba(0, 0, 0, 0.1);
   }
 
   & select {
@@ -228,10 +245,6 @@ select:not(:disabled) {
 }
 .add-icon {
   height: 1em;
-}
-.end {
-  border-bottom: 1px solid #cbd5e1;
-  margin-bottom: 20px;
 }
 .remove-btn {
   display: flex;

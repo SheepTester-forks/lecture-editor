@@ -1,99 +1,108 @@
-import { Annotation, Gesture, GestureTarget, Layout } from '../video-strategy'
+import { PointerEvent, useRef, useState } from 'react'
+import { Annotation } from '../video-strategy'
+import { AnnotationContents } from './AnnotationContents'
+import { RemoveIcon } from './RemoveIcon'
 
-const layoutNames: Record<Layout, string> = {
-  'slide-only': 'slide with voiceover',
-  'slide-avatar': 'slide and avatar',
-  'avatar-only': 'avatar only'
+type DragState = {
+  pointerId: number
+  initX: number
+  initY: number
+  dragging: DOMRect | null
 }
-const gestureNames: Record<Gesture, string> = {
-  point: 'Point',
-  nod: 'Nod',
-  glance: 'Glance'
-}
-const gestureTargetNames: Record<GestureTarget, string> = {
-  top: 'top of slide',
-  middle: 'middle of slide',
-  bottom: 'bottom of slide'
+type VisualDragState = {
+  x: number
+  y: number
+  width: number
 }
 
-export type AnnotationContentsProps = {
+export type AnnotationProps = {
   annotation: Annotation
+  first?: boolean
+  last?: boolean
   onEdit: (annotation: Annotation) => void
+  onRemove?: () => void
 }
-export function AnnotationContents ({
+
+function AnnotationComponent ({
   annotation,
-  onEdit
-}: AnnotationContentsProps) {
-  switch (annotation.type) {
-    case 'set-layout':
-      return (
-        <span>
-          Change layout to{' '}
-          <select
-            value={annotation.layout}
-            onChange={e => {
-              if (
-                e.currentTarget.value === 'slide-only' ||
-                e.currentTarget.value === 'slide-avatar' ||
-                e.currentTarget.value === 'avatar-only'
-              ) {
-                onEdit({ ...annotation, layout: e.currentTarget.value })
-              }
-            }}
-          >
-            {Object.entries(layoutNames).map(([value, name]) => (
-              <option key={value} value={value}>
-                {name}
-              </option>
-            ))}
-          </select>
-        </span>
-      )
-    case 'gesture':
-      return (
-        <span>
-          <strong>{gestureNames[annotation.gesture]}</strong> towards{' '}
-          <strong>{gestureTargetNames[annotation.towards]}</strong>
-        </span>
-      )
-    case 'set-slide':
-      return (
-        <label>
-          Change slide to{' '}
-          <img
-            src={annotation.image.src}
-            alt='Selected slide image'
-            className='selected-slide'
-          />
-          <input
-            type='file'
-            accept='image/*'
-            className='visually-hidden'
-            onChange={e => {
-              const file = e.currentTarget.files?.[0]
-              if (file) {
-                const image = new Image()
-                const url = URL.createObjectURL(file)
-                image.src = url
-                image.addEventListener('load', () => {
-                  URL.revokeObjectURL(url)
-                })
-                image.addEventListener('error', () => {
-                  URL.revokeObjectURL(url)
-                })
-                onEdit({ type: 'set-slide', image })
-              }
-            }}
-          />
-        </label>
-      )
-    case 'play-video':
-      return (
-        <span>
-          Play video <strong>todo</strong>
-        </span>
-      )
-    default:
-      return null
+  first = true,
+  last = true,
+  onEdit,
+  onRemove
+}: AnnotationProps) {
+  const dragState = useRef<DragState | null>(null)
+  const [dragging, setDragging] = useState<VisualDragState | null>(null)
+
+  const handlePointerEnd = (e: PointerEvent) => {
+    if (dragState.current?.pointerId === e.pointerId) {
+      setDragging(null)
+      dragState.current = null
+    }
   }
+
+  return (
+    <div
+      className={`annotation ${first || dragging ? 'first' : ''} ${
+        last || dragging ? 'last' : ''
+      } ${dragging ? 'dragging' : ''}`}
+      style={
+        dragging
+          ? {
+              left: `${dragging.x}px`,
+              top: `${dragging.y}px`,
+              width: `${dragging.width}px`
+            }
+          : undefined
+      }
+      onPointerDown={e => {
+        if (!dragState.current) {
+          dragState.current = {
+            pointerId: e.pointerId,
+            initX: e.clientX,
+            initY: e.clientY,
+            dragging: null
+          }
+          e.currentTarget.setPointerCapture(e.pointerId)
+        }
+      }}
+      onPointerMove={e => {
+        if (dragState.current?.pointerId === e.pointerId) {
+          if (!dragState.current.dragging) {
+            const distance = Math.hypot(
+              e.clientX - dragState.current.initX,
+              e.clientY - dragState.current.initY
+            )
+            if (distance > 10) {
+              dragState.current.dragging =
+                e.currentTarget.getBoundingClientRect()
+            } else {
+              return
+            }
+          }
+          setDragging({
+            x:
+              e.clientX -
+              dragState.current.initX +
+              dragState.current.dragging.left,
+            y:
+              e.clientY -
+              dragState.current.initY +
+              dragState.current.dragging.top,
+            width: dragState.current.dragging.width
+          })
+        }
+      }}
+      onPointerUp={handlePointerEnd}
+      onPointerCancel={handlePointerEnd}
+    >
+      <AnnotationContents annotation={annotation} onEdit={onEdit} />
+      {onRemove ? (
+        <button className='remove-btn' onClick={onRemove}>
+          <RemoveIcon />
+        </button>
+      ) : null}
+    </div>
+  )
 }
+
+export { AnnotationComponent as Annotation }
