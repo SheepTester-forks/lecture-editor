@@ -42,7 +42,10 @@ function v (
 }
 
 type Rect = { x: number; y: number; width: number; height: number }
-function contain (aspect: number, bounds: Rect): Rect {
+function contain (aspect: number | null, bounds: Rect): Rect {
+  if (aspect === null) {
+    return bounds
+  }
   const width = Math.min(bounds.width, bounds.height * aspect)
   const height = width / aspect
   return {
@@ -76,8 +79,11 @@ export function render (
     HEIGHT - PADDING
   )
 
+  const defaultLayout: Layout = 'avatar-only'
   let previousLayout: Layout | undefined
   let currentLayout: { layout: Layout; time: number } | undefined
+  let previousSlide: HTMLImageElement | undefined
+  let currentSlide: HTMLImageElement | undefined
   for (const action of strategy.actions) {
     if (time < action.time) {
       break
@@ -86,36 +92,45 @@ export function render (
       previousLayout = currentLayout?.layout
       currentLayout = action
     }
+    if (action.type === 'set-slide') {
+      previousSlide = currentSlide
+      currentSlide = action.image
+    }
   }
+  previousLayout ??= defaultLayout
+  currentLayout ??= { layout: defaultLayout, time: -Infinity }
 
   const layoutStyles: Record<Layout, Partial<Style>> = {
     'avatar-only': { opacity: 0 },
     'slide-avatar': {
-      ...contain(1.5 + Math.sin(time / 1000) / 2, {
-        x: PADDING,
-        y: PADDING,
-        width: (WIDTH * 2) / 3 - PADDING * 2,
-        height: HEIGHT - PADDING * 2 - 40
-      }),
+      ...contain(
+        currentSlide ? currentSlide.width / currentSlide.height || null : null,
+        {
+          x: PADDING,
+          y: PADDING,
+          width: (WIDTH * 2) / 3 - PADDING * 2,
+          height: HEIGHT - PADDING * 2 - 40
+        }
+      ),
       opacity: 1
     },
     'slide-only': {
-      ...contain(1.5 + Math.sin(time / 1000) / 2, {
-        x: PADDING,
-        y: PADDING,
-        width: WIDTH - PADDING * 2,
-        height: HEIGHT - PADDING * 2 - 40
-      }),
+      ...contain(
+        currentSlide ? currentSlide.width / currentSlide.height || null : null,
+        {
+          x: PADDING,
+          y: PADDING,
+          width: WIDTH - PADDING * 2,
+          height: HEIGHT - PADDING * 2 - 40
+        }
+      ),
       opacity: 1
     }
   }
-  const defaultLayout: Layout = 'avatar-only'
   const layoutTransition = {
-    from: layoutStyles[previousLayout ?? defaultLayout],
-    to: layoutStyles[currentLayout?.layout ?? defaultLayout],
-    t: easeInOutCubic(
-      clamp((time - (currentLayout?.time ?? -Infinity)) / TRANSITION_DURATION)
-    )
+    from: layoutStyles[previousLayout],
+    to: layoutStyles[currentLayout.layout],
+    t: easeInOutCubic(clamp((time - currentLayout.time) / TRANSITION_DURATION))
   }
   const layoutStyle: Style = {
     x: v(layoutTransition.t, layoutTransition.from.x, layoutTransition.to.x, 0),
@@ -177,13 +192,23 @@ export function render (
 
     c.closePath()
     c.clip()
-    c.fillStyle = 'white'
-    c.fillRect(
-      layoutStyle.x,
-      layoutStyle.y,
-      layoutStyle.width,
-      layoutStyle.height
-    )
+    if (currentSlide) {
+      c.drawImage(
+        currentSlide,
+        layoutStyle.x,
+        layoutStyle.y,
+        layoutStyle.width,
+        layoutStyle.height
+      )
+    } else {
+      c.fillStyle = 'white'
+      c.fillRect(
+        layoutStyle.x,
+        layoutStyle.y,
+        layoutStyle.width,
+        layoutStyle.height
+      )
+    }
     c.restore()
   }
 

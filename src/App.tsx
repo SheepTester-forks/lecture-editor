@@ -5,9 +5,10 @@ import { TextArea } from './components/TextArea'
 import { PlayIcon } from './components/PlayIcon'
 import { PauseIcon } from './components/PauseIcon'
 import { Part, strategize } from './video-strategy'
-import { useNow } from './useNow'
+import { useNow } from './lib/useNow'
 import { AnnotationContents } from './components/Annotation'
 import { render } from './render/render'
+import slideImage from './images/slide1.jpg'
 
 type PlayState =
   | { playing: false; time: number }
@@ -19,8 +20,22 @@ export function App () {
     {
       id: -1,
       type: 'text',
-      content: "Hello, I'm Bob. Welcome to CSE 12 lecture recording."
+      content: "Hello, I'm Bob."
     },
+    {
+      id: -6,
+      type: 'annotation',
+      annotation: {
+        type: 'set-slide',
+        image: Object.assign(new Image(), { src: slideImage })
+      }
+    },
+    {
+      id: -8,
+      type: 'annotation',
+      annotation: { type: 'set-layout', layout: 'slide-avatar' }
+    },
+    { id: -7, type: 'text', content: 'Welcome to CSE 12 lecture recording.' },
     {
       id: -2,
       type: 'annotation',
@@ -129,7 +144,7 @@ export function App () {
             onChange={e => {
               const time = e.currentTarget.valueAsNumber
               setPlayState(
-                playState.playing
+                playState.playing && !ended
                   ? { playing: true, offset: time - Date.now() }
                   : { playing: false, time }
               )

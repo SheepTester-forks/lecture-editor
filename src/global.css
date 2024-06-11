@@ -26,6 +26,16 @@ select:not(:disabled) {
   cursor: pointer;
 }
 
+.visually-hidden {
+  clip: rect(0 0 0 0);
+  clip-path: inset(50%);
+  height: 1px;
+  overflow: hidden;
+  position: absolute;
+  white-space: nowrap;
+  width: 1px;
+}
+
 .icon {
   width: 24px;
   height: 24px;
@@ -155,8 +165,8 @@ select:not(:disabled) {
   flex: none;
   display: flex;
   align-items: center;
-  height: 40px;
-  padding: 0 15px;
+  min-height: 40px;
+  padding: 5px 15px;
   margin: 0 20px;
   background-color: #f1f5f9;
   border: 1px solid #cbd5e1;
@@ -174,6 +184,18 @@ select:not(:disabled) {
   & select {
     font-weight: bold;
   }
+
+  & label {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+}
+.selected-slide {
+  height: 40px;
+  border-radius: 5px;
+  cursor: pointer;
+  border: 1px solid #cbd5e1;
 }
 .add-row {
   flex: none;

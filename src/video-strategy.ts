@@ -3,7 +3,7 @@ export type Gesture = 'point' | 'nod' | 'glance'
 export type GestureTarget = 'top' | 'middle' | 'bottom'
 export type Annotation =
   | { type: 'set-layout'; layout: Layout }
-  | { type: 'set-slide'; image: HTMLImageElement | null }
+  | { type: 'set-slide'; image: HTMLImageElement }
   | {
       type: 'play-video'
       video: HTMLVideoElement | null

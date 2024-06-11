@@ -58,9 +58,34 @@ export function AnnotationContents ({
       )
     case 'set-slide':
       return (
-        <span>
-          Change slide to <strong>todo</strong>
-        </span>
+        <label>
+          Change slide to{' '}
+          <img
+            src={annotation.image.src}
+            alt='Selected slide image'
+            className='selected-slide'
+          />
+          <input
+            type='file'
+            accept='image/*'
+            className='visually-hidden'
+            onChange={e => {
+              const file = e.currentTarget.files?.[0]
+              if (file) {
+                const image = new Image()
+                const url = URL.createObjectURL(file)
+                image.src = url
+                image.addEventListener('load', () => {
+                  URL.revokeObjectURL(url)
+                })
+                image.addEventListener('error', () => {
+                  URL.revokeObjectURL(url)
+                })
+                onEdit({ type: 'set-slide', image })
+              }
+            }}
+          />
+        </label>
       )
     case 'play-video':
       return (

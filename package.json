@@ -1,7 +1,7 @@
 {
   "scripts": {
-    "build": "esbuild --bundle src/index.tsx --outdir=public --supported:nesting=false --sourcemap --minify",
-    "dev": "esbuild --bundle src/index.tsx --outdir=public --servedir=public --sourcemap"
+    "build": "esbuild --bundle src/index.tsx --loader:.jpg=file --outdir=public --supported:nesting=false --sourcemap --minify",
+    "dev": "esbuild --bundle src/index.tsx --loader:.jpg=file --outdir=public --servedir=public --sourcemap"
   },
   "dependencies": {
     "react": "^18.2.0",
