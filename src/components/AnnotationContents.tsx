@@ -18,7 +18,7 @@ const gestureTargetNames: Record<GestureTarget, string> = {
 
 export type AnnotationContentsProps = {
   annotation: Annotation
-  onEdit: (annotation: Annotation) => void
+  onEdit?: (annotation: Annotation) => void
 }
 export function AnnotationContents ({
   annotation,
@@ -37,9 +37,10 @@ export function AnnotationContents ({
                 e.currentTarget.value === 'slide-avatar' ||
                 e.currentTarget.value === 'avatar-only'
               ) {
-                onEdit({ ...annotation, layout: e.currentTarget.value })
+                onEdit?.({ ...annotation, layout: e.currentTarget.value })
               }
             }}
+            disabled={!onEdit}
           >
             {Object.entries(layoutNames).map(([value, name]) => (
               <option key={value} value={value}>
@@ -81,9 +82,10 @@ export function AnnotationContents ({
                 image.addEventListener('error', () => {
                   URL.revokeObjectURL(url)
                 })
-                onEdit({ type: 'set-slide', image })
+                onEdit?.({ type: 'set-slide', image })
               }
             }}
+            disabled={!onEdit}
           />
         </label>
       )

@@ -9,7 +9,7 @@ type DragState = {
   initY: number
   dragging: DOMRect | null
 }
-type VisualDragState = {
+export type DragPosition = {
   x: number
   y: number
   width: number
@@ -19,7 +19,11 @@ export type AnnotationProps = {
   annotation: Annotation
   first?: boolean
   last?: boolean
-  onEdit: (annotation: Annotation) => void
+  dragPosition?: DragPosition
+  onDragStart?: () => void
+  onDrag?: (position: DragPosition) => void
+  onDragEnd?: () => void
+  onEdit?: (annotation: Annotation) => void
   onRemove?: () => void
 }
 
@@ -27,30 +31,33 @@ function AnnotationComponent ({
   annotation,
   first = true,
   last = true,
+  dragPosition,
+  onDragStart,
+  onDrag,
+  onDragEnd,
   onEdit,
   onRemove
 }: AnnotationProps) {
   const dragState = useRef<DragState | null>(null)
-  const [dragging, setDragging] = useState<VisualDragState | null>(null)
 
   const handlePointerEnd = (e: PointerEvent) => {
     if (dragState.current?.pointerId === e.pointerId) {
-      setDragging(null)
+      onDragEnd?.()
       dragState.current = null
     }
   }
 
   return (
     <div
-      className={`annotation ${first || dragging ? 'first' : ''} ${
-        last || dragging ? 'last' : ''
-      } ${dragging ? 'dragging' : ''}`}
+      className={`annotation ${first ? 'first' : ''} ${last ? 'last' : ''} ${
+        dragPosition ? 'dragging' : ''
+      }`}
       style={
-        dragging
+        dragPosition
           ? {
-              left: `${dragging.x}px`,
-              top: `${dragging.y}px`,
-              width: `${dragging.width}px`
+              left: `${dragPosition.x}px`,
+              top: `${dragPosition.y}px`,
+              width: `${dragPosition.width}px`
             }
           : undefined
       }
@@ -75,11 +82,12 @@ function AnnotationComponent ({
             if (distance > 10) {
               dragState.current.dragging =
                 e.currentTarget.getBoundingClientRect()
+              onDragStart?.()
             } else {
               return
             }
           }
-          setDragging({
+          onDrag?.({
             x:
               e.clientX -
               dragState.current.initX +

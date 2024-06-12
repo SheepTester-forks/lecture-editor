@@ -13,11 +13,17 @@ import { useNow } from './lib/useNow'
 import { AnnotationContents } from './components/AnnotationContents'
 import { render } from './render/render'
 import slideImage from './images/slide1.jpg'
-import { Annotation } from './components/Annotation'
+import { Annotation, DragPosition } from './components/Annotation'
+import { PaletteAnnotation } from './components/PaletteAnnotation'
 
 type PlayState =
   | { playing: false; time: number }
   | { playing: true; offset: number }
+
+export type DragState = {
+  position: DragPosition
+  annotation: AnnotationType
+}
 
 export function App () {
   const nextId = useRef(0)
@@ -109,24 +115,22 @@ export function App () {
     }
   }, [size, previewVideo, time])
 
-  const [slideAnnotation, setSlideAnnotation] = useState<AnnotationType>(
-    () => ({
-      type: 'set-slide',
-      image: Object.assign(new Image(), { src: slideImage })
-    })
-  )
-  const [layoutAnnotation, setLayoutAnnotation] = useState<AnnotationType>({
-    type: 'set-layout',
-    layout: 'slide-avatar'
-  })
-  const [gestureAnnotation, setGestureAnnotation] = useState<AnnotationType>({
-    type: 'gesture',
-    gesture: 'point',
-    towards: 'top'
-  })
+  const [dragged, setDragged] = useState<DragState | null>(null)
+
+  const handleDrop = () => {
+    setDragged(null)
+  }
 
   return (
     <div className='editor'>
+      {dragged ? (
+        <Annotation
+          annotation={dragged.annotation}
+          first
+          last
+          dragPosition={dragged.position}
+        />
+      ) : null}
       <div className='output'>
         <div className='menubar'>
           <strong className='logo'>Ready Room</strong>
@@ -178,93 +182,114 @@ export function App () {
         </div>
         <p>Drag into your script.</p>
         <div className='annotations'>
-          <Annotation
-            annotation={slideAnnotation}
-            onEdit={setSlideAnnotation}
+          <PaletteAnnotation
+            defaultAnnotation={{
+              type: 'set-slide',
+              image: Object.assign(new Image(), { src: slideImage })
+            }}
+            onDrag={setDragged}
+            onDragEnd={handleDrop}
           />
-          <Annotation
-            annotation={layoutAnnotation}
-            onEdit={setLayoutAnnotation}
+          <PaletteAnnotation
+            defaultAnnotation={{
+              type: 'set-layout',
+              layout: 'slide-avatar'
+            }}
+            onDrag={setDragged}
+            onDragEnd={handleDrop}
           />
-          <Annotation
-            annotation={gestureAnnotation}
-            onEdit={setGestureAnnotation}
+          <PaletteAnnotation
+            defaultAnnotation={{
+              type: 'gesture',
+              gesture: 'point',
+              towards: 'top'
+            }}
+            onDrag={setDragged}
+            onDragEnd={handleDrop}
           />
         </div>
       </div>
       <div className='script'>
         <h2>Script</h2>
-        {parts.map((part, i) => (
-          <Fragment key={part.id}>
-            {part.type === 'text' ? (
-              <div className='text'>
-                <TextArea
-                  placeholder='Start typing...'
-                  value={part.content}
-                  onChange={value =>
-                    setParts(parts =>
-                      parts.with(i, { ...part, content: value })
-                    )
+        {parts.map((part, i) => {
+          const handleRemove = () => {
+            const before = parts[i - 1]
+            const after = parts[i + 1]
+            setParts(parts =>
+              before?.type === 'text' && after?.type === 'text'
+                ? parts.toSpliced(i - 1, 3, {
+                    ...before,
+                    content:
+                      before.content.trimEnd() +
+                      (before.content.trim() !== '' &&
+                      after.content.trim() !== ''
+                        ? '\n\n'
+                        : '') +
+                      after.content.trimStart()
+                  })
+                : parts.toSpliced(i, 1)
+            )
+          }
+          return (
+            <Fragment key={part.id}>
+              {part.type === 'text' ? (
+                <div className='text'>
+                  <TextArea
+                    placeholder='Start typing...'
+                    value={part.content}
+                    onChange={value =>
+                      setParts(parts =>
+                        parts.with(i, { ...part, content: value })
+                      )
+                    }
+                  ></TextArea>
+                  {i > 0 && i < parts.length - 1 && part.content.trim() === '' && (
+                    <button
+                      className='remove-btn'
+                      onClick={() => setParts(parts => parts.toSpliced(i, 1))}
+                    >
+                      <RemoveIcon />
+                    </button>
+                  )}
+                </div>
+              ) : (
+                <Annotation
+                  annotation={part.annotation}
+                  first={parts[i - 1]?.type !== 'annotation'}
+                  last={parts[i + 1]?.type !== 'annotation'}
+                  onDragStart={handleRemove}
+                  onDrag={position =>
+                    setDragged({ position, annotation: part.annotation })
                   }
-                ></TextArea>
-                {i > 0 && i < parts.length - 1 && part.content.trim() === '' && (
-                  <button
-                    className='remove-btn'
-                    onClick={() => setParts(parts => parts.toSpliced(i, 1))}
-                  >
-                    <RemoveIcon />
-                  </button>
+                  onDragEnd={handleDrop}
+                  onEdit={annotation => {
+                    setParts(parts.with(i, { ...part, annotation }))
+                  }}
+                  onRemove={handleRemove}
+                />
+              )}
+              {part.type === 'annotation' &&
+                parts[i + 1]?.type === 'annotation' && (
+                  <div className='add-row'>
+                    <button
+                      className='add-btn'
+                      onClick={() =>
+                        setParts(parts =>
+                          parts.toSpliced(i + 1, 0, {
+                            id: nextId.current++,
+                            type: 'text',
+                            content: ''
+                          })
+                        )
+                      }
+                    >
+                      <AddIcon /> Text
+                    </button>
+                  </div>
                 )}
-              </div>
-            ) : (
-              <Annotation
-                annotation={part.annotation}
-                first={parts[i - 1]?.type !== 'annotation'}
-                last={parts[i + 1]?.type !== 'annotation'}
-                onEdit={annotation => {
-                  setParts(parts.with(i, { ...part, annotation }))
-                }}
-                onRemove={() => {
-                  const before = parts[i - 1]
-                  const after = parts[i + 1]
-                  console.log(before?.type === 'text' && after?.type === 'text')
-                  setParts(parts =>
-                    before?.type === 'text' && after?.type === 'text'
-                      ? parts.toSpliced(i - 1, 3, {
-                          ...before,
-                          content:
-                            before.content.trimEnd() +
-                            (before.content.trim() !== '' &&
-                            after.content.trim() !== ''
-                              ? '\n\n'
-                              : '') +
-                            after.content.trimStart()
-                        })
-                      : parts.toSpliced(i, 1)
-                  )
-                }}
-              />
-            )}
-            {part.type === 'annotation' && parts[i + 1]?.type === 'annotation' && (
-              <div className='add-row'>
-                <button
-                  className='add-btn'
-                  onClick={() =>
-                    setParts(parts =>
-                      parts.toSpliced(i + 1, 0, {
-                        id: nextId.current++,
-                        type: 'text',
-                        content: ''
-                      })
-                    )
-                  }
-                >
-                  <AddIcon /> Text
-                </button>
-              </div>
-            )}
-          </Fragment>
-        ))}
+            </Fragment>
+          )
+        })}
       </div>
     </div>
   )
