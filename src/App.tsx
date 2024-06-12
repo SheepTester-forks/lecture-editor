@@ -204,24 +204,25 @@ export function App () {
             )
             if (distance > 10) {
               ref.current?.setPointerCapture(e.pointerId)
+              const targets: DragTarget[] = []
+              let top = 0
+              for (const { id } of parts) {
+                if (id === state.partId) {
+                  continue
+                }
+                const rect = partElements.current[id].getBoundingClientRect()
+                top ||= rect.top
+                targets.push({
+                  left: rect.left,
+                  width: rect.width,
+                  top
+                })
+                top += rect.height
+              }
+              targets.push({ ...targets[targets.length - 1], top })
               state.dragging = {
                 initRect: state.element.getBoundingClientRect(),
-                targets: parts.flatMap(({ id }, i) => {
-                  if (id === state.partId) {
-                    return []
-                  }
-                  const part = partElements.current[id]
-                  const rect = part.getBoundingClientRect()
-                  const results: DragTarget[] = [rect]
-                  if (i === parts.length - 1) {
-                    results.push({
-                      left: rect.left,
-                      width: rect.width,
-                      top: rect.top + rect.height
-                    })
-                  }
-                  return results
-                })
+                targets
               }
               setParts(
                 parts.filter(
