@@ -37,6 +37,7 @@ type DragState = {
   initX: number
   initY: number
   element: Element
+  partId?: number
   annotation: AnnotationType
   dragging: {
     initRect: DOMRect
@@ -142,17 +143,31 @@ export function App () {
     }
   }, [size, previewVideo, time])
 
-  const partElements = useRef<(Element | null)[]>([])
+  const partElements = useRef<Record<number, Element>>({})
+  useEffect(() => {
+    // Clean up partElements
+    partElements.current = Object.fromEntries(
+      Object.entries(partElements.current).filter(([id]) =>
+        parts.find(part => part.id === +id)
+      )
+    )
+  }, [parts])
+
   const dragState = useRef<DragState | null>(null)
   const [dragged, setDragged] = useState<DraggedAnnotation | null>(null)
 
-  const handleDragStart = (e: PointerEvent, annotation: AnnotationType) => {
+  const handleDragStart = (
+    e: PointerEvent,
+    annotation: AnnotationType,
+    partId?: number
+  ) => {
     if (!dragState.current) {
       dragState.current = {
         pointerId: e.pointerId,
         initX: e.clientX,
         initY: e.clientY,
         element: e.currentTarget,
+        partId,
         annotation,
         dragging: null,
         insert: null
@@ -161,7 +176,7 @@ export function App () {
   }
   const handlePointerEnd = (e: PointerEvent) => {
     if (dragState.current?.pointerId === e.pointerId) {
-      if (dragState.current.insert) {
+      if (dragState.current.insert !== null) {
         setParts(
           parts.toSpliced(dragState.current.insert, 0, {
             id: nextId.current++,
@@ -191,10 +206,11 @@ export function App () {
               ref.current?.setPointerCapture(e.pointerId)
               state.dragging = {
                 initRect: state.element.getBoundingClientRect(),
-                targets: partElements.current.flatMap((part, i) => {
-                  if (!part || i >= parts.length) {
+                targets: parts.flatMap(({ id }, i) => {
+                  if (id === state.partId) {
                     return []
                   }
+                  const part = partElements.current[id]
                   const rect = part.getBoundingClientRect()
                   const results: DragTarget[] = [rect]
                   if (i === parts.length - 1) {
@@ -341,10 +357,9 @@ export function App () {
               <div
                 className='text'
                 ref={elem => {
-                  while (partElements.current.length <= i) {
-                    partElements.current.push(null)
+                  if (elem) {
+                    partElements.current[part.id] = elem
                   }
-                  partElements.current[i] = elem
                 }}
               >
                 <TextArea
@@ -370,7 +385,7 @@ export function App () {
                 annotation={part.annotation}
                 first={parts[i - 1]?.type !== 'annotation'}
                 last={parts[i + 1]?.type !== 'annotation'}
-                onDragStart={e => handleDragStart(e, part.annotation)}
+                onDragStart={e => handleDragStart(e, part.annotation, part.id)}
                 onEdit={annotation => {
                   setParts(parts.with(i, { ...part, annotation }))
                 }}
@@ -393,10 +408,9 @@ export function App () {
                   )
                 }}
                 refCallback={elem => {
-                  while (partElements.current.length <= i) {
-                    partElements.current.push(null)
+                  if (elem) {
+                    partElements.current[part.id] = elem
                   }
-                  partElements.current[i] = elem
                 }}
               />
             )}
