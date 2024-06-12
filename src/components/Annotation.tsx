@@ -1,4 +1,4 @@
-import { PointerEvent, useRef, useState } from 'react'
+import { PointerEvent } from 'react'
 import { Annotation } from '../video-strategy'
 import { AnnotationContents } from './AnnotationContents'
 import { RemoveIcon } from './RemoveIcon'
@@ -17,6 +17,7 @@ export type AnnotationProps = {
   onDragStart?: (e: PointerEvent) => void
   onEdit?: (annotation: Annotation) => void
   onRemove?: () => void
+  refCallback?: (element: Element | null) => void
 }
 
 function AnnotationComponent ({
@@ -26,7 +27,8 @@ function AnnotationComponent ({
   dragPosition,
   onDragStart,
   onEdit,
-  onRemove
+  onRemove,
+  refCallback
 }: AnnotationProps) {
   return (
     <div
@@ -43,6 +45,7 @@ function AnnotationComponent ({
           : undefined
       }
       onPointerDown={onDragStart}
+      ref={refCallback}
     >
       <AnnotationContents annotation={annotation} onEdit={onEdit} />
       {onRemove ? (

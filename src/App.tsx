@@ -7,25 +7,30 @@ import {
   useState
 } from 'react'
 import { AddIcon } from './components/AddIcon'
+import { Annotation, DragPosition } from './components/Annotation'
+import { PaletteAnnotation } from './components/PaletteAnnotation'
+import { PauseIcon } from './components/PauseIcon'
+import { PlayIcon } from './components/PlayIcon'
 import { RemoveIcon } from './components/RemoveIcon'
 import { TextArea } from './components/TextArea'
-import { PlayIcon } from './components/PlayIcon'
-import { PauseIcon } from './components/PauseIcon'
+import slideImage from './images/slide1.jpg'
+import { useNow } from './lib/useNow'
+import { render } from './render/render'
 import {
   Annotation as AnnotationType,
   Part,
   strategize
 } from './video-strategy'
-import { useNow } from './lib/useNow'
-import { AnnotationContents } from './components/AnnotationContents'
-import { render } from './render/render'
-import slideImage from './images/slide1.jpg'
-import { Annotation, DragPosition } from './components/Annotation'
-import { PaletteAnnotation } from './components/PaletteAnnotation'
 
 type PlayState =
   | { playing: false; time: number }
   | { playing: true; offset: number }
+
+type DragTarget = {
+  left: number
+  top: number
+  width: number
+}
 
 type DragState = {
   pointerId: number
@@ -33,12 +38,16 @@ type DragState = {
   initY: number
   element: Element
   annotation: AnnotationType
-  dragging: DOMRect | null
+  dragging: {
+    initRect: DOMRect
+    targets: DragTarget[]
+  } | null
 }
 
 export type DraggedAnnotation = {
   position: DragPosition
   annotation: AnnotationType
+  insert: number | null
 }
 
 export function App () {
@@ -132,6 +141,7 @@ export function App () {
     }
   }, [size, previewVideo, time])
 
+  const partElements = useRef<(Element | null)[]>([])
   const dragState = useRef<DragState | null>(null)
   const [dragged, setDragged] = useState<DraggedAnnotation | null>(null)
 
@@ -168,7 +178,24 @@ export function App () {
             )
             if (distance > 10) {
               ref.current?.setPointerCapture(e.pointerId)
-              state.dragging = state.element.getBoundingClientRect()
+              state.dragging = {
+                initRect: state.element.getBoundingClientRect(),
+                targets: partElements.current.flatMap((part, i) => {
+                  if (!part || i >= parts.length) {
+                    return []
+                  }
+                  const rect = part.getBoundingClientRect()
+                  const results: DragTarget[] = [rect]
+                  if (i === parts.length - 1) {
+                    results.push({
+                      left: rect.left,
+                      width: rect.width,
+                      top: rect.top + rect.height
+                    })
+                  }
+                  return results
+                })
+              }
               setParts(
                 parts.filter(
                   part =>
@@ -180,13 +207,30 @@ export function App () {
               return
             }
           }
+          const position = {
+            x: e.clientX - state.initX + state.dragging.initRect.left,
+            y: e.clientY - state.initY + state.dragging.initRect.top,
+            width: state.dragging.initRect.width
+          }
           setDragged({
-            position: {
-              x: e.clientX - state.initX + state.dragging.left,
-              y: e.clientY - state.initY + state.dragging.top,
-              width: state.dragging.width
-            },
-            annotation: state.annotation
+            position,
+            annotation: state.annotation,
+            insert: state.dragging.targets.reduce<{
+              distance: number
+              index: number | null
+            }>(
+              (acc, curr, index) => {
+                if (
+                  e.clientX < curr.left ||
+                  e.clientX > curr.left + curr.width
+                ) {
+                  return acc
+                }
+                const distance = Math.abs(e.clientY - curr.top)
+                return distance < acc.distance ? { distance, index } : acc
+              },
+              { distance: Infinity, index: null }
+            ).index
           })
         }
       }}
@@ -280,8 +324,19 @@ export function App () {
         <h2>Script</h2>
         {parts.map((part, i) => (
           <Fragment key={part.id}>
+            {i === dragged?.insert ? (
+              <div className='insertion-point'></div>
+            ) : null}
             {part.type === 'text' ? (
-              <div className='text'>
+              <div
+                className='text'
+                ref={elem => {
+                  while (partElements.current.length <= i) {
+                    partElements.current.push(null)
+                  }
+                  partElements.current[i] = elem
+                }}
+              >
                 <TextArea
                   placeholder='Start typing...'
                   value={part.content}
@@ -327,6 +382,12 @@ export function App () {
                       : parts.toSpliced(i, 1)
                   )
                 }}
+                refCallback={elem => {
+                  while (partElements.current.length <= i) {
+                    partElements.current.push(null)
+                  }
+                  partElements.current[i] = elem
+                }}
               />
             )}
             {part.type === 'annotation' && parts[i + 1]?.type === 'annotation' && (
@@ -349,6 +410,9 @@ export function App () {
             )}
           </Fragment>
         ))}
+        {dragged?.insert === parts.length ? (
+          <div className='insertion-point'></div>
+        ) : null}
       </div>
     </div>
   )

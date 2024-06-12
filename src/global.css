@@ -194,6 +194,7 @@ select:not(:disabled) {
   }
   &.dragging {
     position: fixed;
+    z-index: 10;
     cursor: grabbing;
     box-shadow: 0 3px 10px rgba(0, 0, 0, 0.1);
   }
@@ -213,6 +214,14 @@ select:not(:disabled) {
   border-radius: 5px;
   cursor: pointer;
   border: 1px solid #cbd5e1;
+}
+.insertion-point {
+  flex: none;
+  height: 2px;
+  margin: -1px 0;
+  background-color: #3b82f6;
+  position: relative;
+  z-index: 1;
 }
 .add-row {
   flex: none;

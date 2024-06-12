@@ -1,7 +1,6 @@
 import { PointerEvent, useState } from 'react'
 import { Annotation as AnnotationType } from '../video-strategy'
-import { Annotation, DragPosition } from './Annotation'
-import { DraggedAnnotation } from '../App'
+import { Annotation } from './Annotation'
 
 export type PaletteAnnotationProps = {
   defaultAnnotation: AnnotationType
