@@ -1,25 +1,22 @@
-import { useState } from 'react'
+import { PointerEvent, useState } from 'react'
 import { Annotation as AnnotationType } from '../video-strategy'
 import { Annotation, DragPosition } from './Annotation'
-import { DragState } from '../App'
+import { DraggedAnnotation } from '../App'
 
 export type PaletteAnnotationProps = {
   defaultAnnotation: AnnotationType
-  onDrag: (dragState: DragState) => void
-  onDragEnd: () => void
+  onDragStart?: (e: PointerEvent, annotation: AnnotationType) => void
 }
 export function PaletteAnnotation ({
   defaultAnnotation,
-  onDrag,
-  onDragEnd
+  onDragStart
 }: PaletteAnnotationProps) {
   const [annotation, setAnnotation] = useState(defaultAnnotation)
   return (
     <Annotation
       annotation={annotation}
       onEdit={setAnnotation}
-      onDrag={position => onDrag({ position, annotation })}
-      onDragEnd={onDragEnd}
+      onDragStart={e => onDragStart?.(e, annotation)}
     ></Annotation>
   )
 }
