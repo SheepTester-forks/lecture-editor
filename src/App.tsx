@@ -42,6 +42,7 @@ type DragState = {
     initRect: DOMRect
     targets: DragTarget[]
   } | null
+  insert: number | null
 }
 
 export type DraggedAnnotation = {
@@ -153,12 +154,22 @@ export function App () {
         initY: e.clientY,
         element: e.currentTarget,
         annotation,
-        dragging: null
+        dragging: null,
+        insert: null
       }
     }
   }
   const handlePointerEnd = (e: PointerEvent) => {
     if (dragState.current?.pointerId === e.pointerId) {
+      if (dragState.current.insert) {
+        setParts(
+          parts.toSpliced(dragState.current.insert, 0, {
+            id: nextId.current++,
+            type: 'annotation',
+            annotation: dragState.current.annotation
+          })
+        )
+      }
       dragState.current = null
       setDragged(null)
     }
@@ -212,25 +223,24 @@ export function App () {
             y: e.clientY - state.initY + state.dragging.initRect.top,
             width: state.dragging.initRect.width
           }
+          const insert = state.dragging.targets.reduce<{
+            distance: number
+            index: number | null
+          }>(
+            (acc, curr, index) => {
+              if (e.clientX < curr.left || e.clientX > curr.left + curr.width) {
+                return acc
+              }
+              const distance = Math.abs(e.clientY - curr.top)
+              return distance < acc.distance ? { distance, index } : acc
+            },
+            { distance: Infinity, index: null }
+          ).index
+          state.insert = insert
           setDragged({
             position,
             annotation: state.annotation,
-            insert: state.dragging.targets.reduce<{
-              distance: number
-              index: number | null
-            }>(
-              (acc, curr, index) => {
-                if (
-                  e.clientX < curr.left ||
-                  e.clientX > curr.left + curr.width
-                ) {
-                  return acc
-                }
-                const distance = Math.abs(e.clientY - curr.top)
-                return distance < acc.distance ? { distance, index } : acc
-              },
-              { distance: Infinity, index: null }
-            ).index
+            insert
           })
         }
       }}
