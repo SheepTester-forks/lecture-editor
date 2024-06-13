@@ -1,4 +1,5 @@
 import { Layout, Strategy } from '../video-strategy'
+import khoslaPng from '../images/khosla1.png'
 
 const FONT = `'Brix Sans', 'Source Sans 3', sans-serif`
 
@@ -7,6 +8,9 @@ const HEIGHT = 1080
 const PADDING = 20
 
 const TRANSITION_DURATION = 500
+
+const khosla = new Image()
+khosla.src = khoslaPng
 
 function clamp (value: number, min = 0, max = 1): number {
   if (value > max) {
@@ -58,6 +62,8 @@ function contain (aspect: number | null, bounds: Rect): Rect {
 
 type Style = Rect & {
   opacity: number
+  avatarX: number
+  avatarOpacity: number
 }
 
 export function render (
@@ -114,8 +120,13 @@ export function render (
       : undefined,
     1
   )
+  // TODO: split this up
   const layoutStyles: Record<Layout, Partial<Style>> = {
-    'avatar-only': { opacity: 0 },
+    'avatar-only': {
+      opacity: 0,
+      avatarX: WIDTH / 2,
+      avatarOpacity: 1
+    },
     'slide-avatar': {
       ...contain(aspect, {
         x: PADDING,
@@ -123,7 +134,9 @@ export function render (
         width: (WIDTH * 2) / 3 - PADDING * 2,
         height: HEIGHT - PADDING * 2 - 40
       }),
-      opacity: 1
+      opacity: 1,
+      avatarX: (WIDTH * 2.5) / 3,
+      avatarOpacity: 1
     },
     'slide-only': {
       ...contain(aspect, {
@@ -132,7 +145,8 @@ export function render (
         width: WIDTH - PADDING * 2,
         height: HEIGHT - PADDING * 2 - 40
       }),
-      opacity: 1
+      opacity: 1,
+      avatarOpacity: 0
     }
   }
   const layoutTransition = {
@@ -159,6 +173,18 @@ export function render (
       layoutTransition.t,
       layoutTransition.from.opacity,
       layoutTransition.to.opacity,
+      1
+    ),
+    avatarX: v(
+      layoutTransition.t,
+      layoutTransition.from.avatarX,
+      layoutTransition.to.avatarX,
+      WIDTH
+    ),
+    avatarOpacity: v(
+      layoutTransition.t,
+      layoutTransition.from.avatarOpacity,
+      layoutTransition.to.avatarOpacity,
       1
     )
   }
@@ -229,6 +255,10 @@ export function render (
       c.globalAlpha = 1
     }
     c.restore()
+  }
+  if (layoutStyle.avatarOpacity > 0) {
+    c.globalAlpha = layoutStyle.avatarOpacity
+    c.drawImage(khosla, layoutStyle.avatarX - 1600 / 2, HEIGHT - 900, 1600, 900)
   }
 
   c.restore()
