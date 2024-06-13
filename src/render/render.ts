@@ -76,15 +76,6 @@ export function render (
   c.clearRect(0, 0, WIDTH, HEIGHT)
   c.scale(c.canvas.width / WIDTH, c.canvas.height / HEIGHT)
 
-  c.font = `40px ${FONT}`
-  c.fillStyle = 'black'
-  c.textAlign = 'right'
-  c.fillText(
-    `© ${new Date().getFullYear()} Regents of the University of California`,
-    WIDTH - PADDING,
-    HEIGHT - PADDING
-  )
-
   const defaultLayout: Layout = 'avatar-only'
   let previousLayout: Layout | undefined
   let currentLayout: { layout: Layout; time: number } | undefined
@@ -259,7 +250,17 @@ export function render (
   if (layoutStyle.avatarOpacity > 0) {
     c.globalAlpha = layoutStyle.avatarOpacity
     c.drawImage(khosla, layoutStyle.avatarX - 1600 / 2, HEIGHT - 900, 1600, 900)
+    c.globalAlpha = 1
   }
+
+  c.font = `40px ${FONT}`
+  c.fillStyle = 'white'
+  c.textAlign = 'right'
+  c.fillText(
+    `© ${new Date().getFullYear()} Regents of the University of California`,
+    WIDTH - PADDING,
+    HEIGHT - PADDING
+  )
 
   c.restore()
 }
