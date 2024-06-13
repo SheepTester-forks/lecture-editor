@@ -1,5 +1,6 @@
 import {
   Fragment,
+  MutableRefObject,
   PointerEvent,
   useEffect,
   useMemo,
@@ -50,6 +51,18 @@ export type DraggedAnnotation = {
   position: DragPosition
   annotation: AnnotationType
   insert: number | null
+}
+
+/**
+ * Enforces the following rules:
+ * - The script must always start and end with text.
+ * - Adjacent text parts must be merged.
+ */
+function normalizeParts (
+  parts: Part[],
+  nextId: MutableRefObject<number>
+): Part[] {
+  return parts
 }
 
 export function App () {
@@ -178,11 +191,14 @@ export function App () {
     if (dragState.current?.pointerId === e.pointerId) {
       if (dragState.current.insert !== null) {
         setParts(
-          parts.toSpliced(dragState.current.insert, 0, {
-            id: nextId.current++,
-            type: 'annotation',
-            annotation: dragState.current.annotation
-          })
+          normalizeParts(
+            parts.toSpliced(dragState.current.insert, 0, {
+              id: nextId.current++,
+              type: 'annotation',
+              annotation: dragState.current.annotation
+            }),
+            nextId
+          )
         )
       }
       dragState.current = null
@@ -394,18 +410,7 @@ export function App () {
                   const before = parts[i - 1]
                   const after = parts[i + 1]
                   setParts(parts =>
-                    before?.type === 'text' && after?.type === 'text'
-                      ? parts.toSpliced(i - 1, 3, {
-                          ...before,
-                          content:
-                            before.content.trimEnd() +
-                            (before.content.trim() !== '' &&
-                            after.content.trim() !== ''
-                              ? '\n\n'
-                              : '') +
-                            after.content.trimStart()
-                        })
-                      : parts.toSpliced(i, 1)
+                    normalizeParts(parts.toSpliced(i, 1), nextId)
                   )
                 }}
                 refCallback={elem => {

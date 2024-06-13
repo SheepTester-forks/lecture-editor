@@ -83,7 +83,7 @@ export function render (
   let previousLayout: Layout | undefined
   let currentLayout: { layout: Layout; time: number } | undefined
   let previousSlide: HTMLImageElement | undefined
-  let currentSlide: HTMLImageElement | undefined
+  let currentSlide: { image: HTMLImageElement; time: number } | undefined
   for (const action of strategy.actions) {
     if (time < action.time) {
       break
@@ -93,37 +93,45 @@ export function render (
       currentLayout = action
     }
     if (action.type === 'set-slide') {
-      previousSlide = currentSlide
-      currentSlide = action.image
+      previousSlide = currentSlide?.image
+      currentSlide = action
     }
   }
-  previousLayout ??= defaultLayout
   currentLayout ??= { layout: defaultLayout, time: -Infinity }
+  previousLayout ??=
+    currentLayout.time === 0 ? currentLayout.layout : defaultLayout
 
+  const slideT = easeInOutCubic(
+    clamp((time - (currentSlide?.time ?? -Infinity)) / TRANSITION_DURATION)
+  )
+  const aspect = v(
+    slideT,
+    previousSlide
+      ? previousSlide.width / previousSlide.height || undefined
+      : undefined,
+    currentSlide
+      ? currentSlide.image.width / currentSlide.image.height || undefined
+      : undefined,
+    1
+  )
   const layoutStyles: Record<Layout, Partial<Style>> = {
     'avatar-only': { opacity: 0 },
     'slide-avatar': {
-      ...contain(
-        currentSlide ? currentSlide.width / currentSlide.height || null : null,
-        {
-          x: PADDING,
-          y: PADDING,
-          width: (WIDTH * 2) / 3 - PADDING * 2,
-          height: HEIGHT - PADDING * 2 - 40
-        }
-      ),
+      ...contain(aspect, {
+        x: PADDING,
+        y: PADDING,
+        width: (WIDTH * 2) / 3 - PADDING * 2,
+        height: HEIGHT - PADDING * 2 - 40
+      }),
       opacity: 1
     },
     'slide-only': {
-      ...contain(
-        currentSlide ? currentSlide.width / currentSlide.height || null : null,
-        {
-          x: PADDING,
-          y: PADDING,
-          width: WIDTH - PADDING * 2,
-          height: HEIGHT - PADDING * 2 - 40
-        }
-      ),
+      ...contain(aspect, {
+        x: PADDING,
+        y: PADDING,
+        width: WIDTH - PADDING * 2,
+        height: HEIGHT - PADDING * 2 - 40
+      }),
       opacity: 1
     }
   }
@@ -192,9 +200,9 @@ export function render (
 
     c.closePath()
     c.clip()
-    if (currentSlide) {
+    if (currentSlide?.image) {
       c.drawImage(
-        currentSlide,
+        currentSlide.image,
         layoutStyle.x,
         layoutStyle.y,
         layoutStyle.width,
@@ -208,6 +216,17 @@ export function render (
         layoutStyle.width,
         layoutStyle.height
       )
+    }
+    if (slideT < 1 && previousSlide) {
+      c.globalAlpha = 1 - slideT
+      c.drawImage(
+        previousSlide,
+        layoutStyle.x,
+        layoutStyle.y,
+        layoutStyle.width,
+        layoutStyle.height
+      )
+      c.globalAlpha = 1
     }
     c.restore()
   }
