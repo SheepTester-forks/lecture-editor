@@ -53,8 +53,45 @@ export function AnnotationContents ({
     case 'gesture':
       return (
         <span>
-          <strong>{gestureNames[annotation.gesture]}</strong> towards{' '}
-          <strong>{gestureTargetNames[annotation.towards]}</strong>
+          <select
+            value={annotation.gesture}
+            onChange={e => {
+              if (
+                e.currentTarget.value === 'point' ||
+                e.currentTarget.value === 'nod' ||
+                e.currentTarget.value === 'glance'
+              ) {
+                onEdit?.({ ...annotation, gesture: e.currentTarget.value })
+              }
+            }}
+            disabled={!onEdit}
+          >
+            {Object.entries(gestureNames).map(([value, name]) => (
+              <option key={value} value={value}>
+                {name}
+              </option>
+            ))}
+          </select>{' '}
+          towards{' '}
+          <select
+            value={annotation.towards}
+            onChange={e => {
+              if (
+                e.currentTarget.value === 'top' ||
+                e.currentTarget.value === 'middle' ||
+                e.currentTarget.value === 'bottom'
+              ) {
+                onEdit?.({ ...annotation, towards: e.currentTarget.value })
+              }
+            }}
+            disabled={!onEdit}
+          >
+            {Object.entries(gestureTargetNames).map(([value, name]) => (
+              <option key={value} value={value}>
+                {name}
+              </option>
+            ))}
+          </select>
         </span>
       )
     case 'set-slide':

@@ -20,6 +20,7 @@ import { render } from './render/render'
 import {
   Annotation as AnnotationType,
   Part,
+  exportScript,
   strategize
 } from './video-strategy'
 
@@ -291,8 +292,21 @@ export function App () {
       <div className='output'>
         <div className='menubar'>
           <strong className='logo'>Ready Room</strong>
-          <button className='menubar-btn'>File</button>
-          <button className='menubar-btn'>Edit</button>
+          <button className='menubar-btn' disabled>
+            File
+          </button>
+          <button className='menubar-btn' disabled>
+            Edit
+          </button>
+          <button
+            className='menubar-btn'
+            onClick={() => {
+              console.log(exportScript(parts))
+              alert('check console for script')
+            }}
+          >
+            Export
+          </button>
         </div>
         <div className='preview'>
           <canvas

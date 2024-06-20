@@ -65,6 +65,9 @@ select:not(:disabled) {
   height: 40px;
   gap: 15px;
 }
+.menubar-btn:disabled {
+  opacity: 0.5;
+}
 .preview {
   aspect-ratio: 16 / 9;
   border-radius: 10px;

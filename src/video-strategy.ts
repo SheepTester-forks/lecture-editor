@@ -91,3 +91,23 @@ function * splitBySpaces (string: string): Generator<string> {
   }
   yield string.slice(lastIndex)
 }
+
+export function exportScript (parts: PartBase[]): string {
+  // https://docs.heygen.com/reference/create-an-avatar-video-v2#voice-settings
+  // look into this
+  return parts
+    .map(part =>
+      part.type === 'text'
+        ? part.content
+        : part.annotation.type === 'set-layout'
+        ? `[type: ${
+            part.annotation.layout === 'avatar-only'
+              ? 'avatar-only'
+              : part.annotation.layout === 'slide-avatar'
+              ? 'side-by-side'
+              : 'media-only'
+          }]`
+        : 'TODO'
+    )
+    .join('')
+}
